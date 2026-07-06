@@ -1,4 +1,4 @@
-name: Docker CI Pipeline
+name: Docker CI/CD Pipeline
 
 on:
   push:
@@ -6,7 +6,7 @@ on:
       - main
 
 jobs:
-  docker-build:
+  docker-build-and-deploy:
 
     runs-on: ubuntu-latest
 
@@ -32,3 +32,22 @@ jobs:
       - name: Push Docker Image
         run: |
           docker push ${{ secrets.DOCKER_USERNAME }}/week2devops:latest
+
+      # Step 5: Deploy to EC2
+      - name: Deploy to EC2
+        uses: appleboy/ssh-action@v1.2.2
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USER }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          script: |
+            sudo docker pull ${{ secrets.DOCKER_USERNAME }}/week2devops:latest
+
+            sudo docker stop mywebsite || true
+
+            sudo docker rm mywebsite || true
+
+            sudo docker run -d \
+              --name mywebsite \
+              -p 80:80 \
+              ${{ secrets.DOCKER_USERNAME }}/week2devops:latest
