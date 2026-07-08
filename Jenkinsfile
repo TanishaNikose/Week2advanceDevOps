@@ -25,6 +25,7 @@ pipeline {
                 if exist index.html (
                     echo Test Passed
                 ) else (
+                    echo Test Failed
                     exit /b 1
                 )
                 '''
@@ -39,12 +40,28 @@ pipeline {
 
         stage('Push Docker Image') {
             steps {
-                script {
-                    docker.withRegistry('https://registry.hub.docker.com', 'dockerhub') {
-                        bat 'docker push %IMAGE_NAME%'
-                    }
+                withCredentials([usernamePassword(
+                    credentialsId: 'dockerhub',
+                    usernameVariable: 'DOCKER_USER',
+                    passwordVariable: 'DOCKER_PASS'
+                )]) {
+
+                    bat '''
+                    docker login -u %DOCKER_USER% -p %DOCKER_PASS%
+                    docker push %IMAGE_NAME%
+                    '''
                 }
             }
+        }
+    }
+
+    post {
+        success {
+            echo 'Pipeline executed successfully!'
+        }
+
+        failure {
+            echo 'Pipeline failed.'
         }
     }
 }
