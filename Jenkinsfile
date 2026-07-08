@@ -112,7 +112,7 @@ pipeline {
 
                         user: "ubuntu",
 
-                        identityFile: "C:\\Users\\Webkorps\\.ssh\\your-key.pem",
+                        identityFile: "C:\\Users\\Webkorps\\.ssh\\myfirstkeypair.pem",
 
                         allowAnyHosts: true
 
