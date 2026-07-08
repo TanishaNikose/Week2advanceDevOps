@@ -74,7 +74,6 @@ pipeline {
 
             steps {
 
-
                 withCredentials([usernamePassword(
                     credentialsId: 'dockerhub',
                     usernameVariable: 'DOCKER_USER',
@@ -98,43 +97,49 @@ pipeline {
 
 
 
-
         stage('Deploy to EC2') {
-
 
             steps {
 
-
-                sshagent(['aws-ec2-key']) {
-
-
-                    bat '''
-
-                    ssh -o StrictHostKeyChecking=no ubuntu@%EC2_IP% "
-
-                    docker pull %IMAGE_NAME%
-
-                    docker stop week2-container || true
-
-                    docker rm week2-container || true
+                script {
 
 
-                    docker run -d \
-                    --name week2-container \
-                    -p 80:80 \
-                    %IMAGE_NAME%
+                    def remote = [
+
+                        name: 'aws-ec2',
+
+                        host: "${EC2_IP}",
+
+                        user: "ubuntu",
+
+                        identityFile: "C:\\Users\\Webkorps\\.ssh\\your-key.pem",
+
+                        allowAnyHosts: true
+
+                    ]
 
 
-                    "
+                    sshCommand remote: remote, command: """
 
-                    '''
+                        docker pull ${IMAGE_NAME}
+
+                        docker stop week2-container || true
+
+                        docker rm week2-container || true
+
+
+                        docker run -d \\
+                        --name week2-container \\
+                        -p 80:80 \\
+                        ${IMAGE_NAME}
+
+                    """
 
                 }
 
             }
 
         }
-
 
 
     }
